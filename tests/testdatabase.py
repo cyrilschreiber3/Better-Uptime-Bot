@@ -18,7 +18,7 @@ def dumpInDatabase(data, state):
 
     # Create tables 
     cursor.execute('''CREATE TABLE IF NOT EXISTS alerts
-                (id INTEGER, nature VARCHAR(20), monitor VARCHAR(45), checkedURL VARCHAR(45), cause VARCHAR(100), startDate VARCHAR(45), link VARCHAR(150), resolved_id INTEGER, PRIMARY KEY (id AUTOINCREMENT), FOREIGN KEY ("resolved_id") REFERENCES resolutions(id))''')
+                (id INTEGER, nature VARCHAR(20), monitor VARCHAR(45), checkedURL VARCHAR(45), cause VARCHAR(100), startDate VARCHAR(45), link VARCHAR(150), resolved_id INTEGER, message_id INTEGER, PRIMARY KEY (id AUTOINCREMENT), FOREIGN KEY ("resolved_id") REFERENCES resolutions(id))''')
 
     cursor.execute('''CREATE TABLE IF NOT EXISTS resolutions 
         (id INTEGER, monitor VARCHAR(45), checkedURL VARCHAR(45), cause VARCHAR(100), startDate VARCHAR(45), endDate VARCHAR(45), length VARCHAR(45), link VARCHAR(150), PRIMARY KEY (id))''')
@@ -38,7 +38,7 @@ def dumpInDatabase(data, state):
         results = cursor.fetchall()
         exists = False
         for row in results:
-            if incidentURL_col == row[5]:
+            if incidentURL_col == row[6]:
                 exists = True
 
         if not exists: # if not, add it to database
