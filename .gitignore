@@ -1,3 +1,4 @@
 .env
 *.db
 mail-samples/*
+tests/__pycache__

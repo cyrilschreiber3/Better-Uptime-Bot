@@ -3,8 +3,8 @@ import sqlite3
 import re
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
-mail = open(r"mail-samples/mail-alert-raw.html")
-mail2 = open(r"mail-samples/mail-resolved-raw.html")
+mail = open(r"../mail-samples/mail-alert-raw.html")
+mail2 = open(r"../mail-samples/mail-resolved-raw.html")
 sender = '"Better Uptime ALERT" <alerts@alerts.betteruptime.com>'
 sender2 = '"Better Uptime RESOLVED" <alerts@alerts.betteruptime.com>'
 
@@ -18,7 +18,7 @@ def dumpInDatabase(data, state):
 
     # Create tables 
     cursor.execute('''CREATE TABLE IF NOT EXISTS alerts
-                (id INTEGER, monitor VARCHAR(45), checkedURL VARCHAR(45), cause VARCHAR(100), startDate VARCHAR(45), link VARCHAR(150) , resolved_id INTEGER, PRIMARY KEY (id AUTOINCREMENT), FOREIGN KEY ("resolved_id") REFERENCES resolutions(id))''')
+                (id INTEGER, nature VARCHAR(20), monitor VARCHAR(45), checkedURL VARCHAR(45), cause VARCHAR(100), startDate VARCHAR(45), link VARCHAR(150), resolved_id INTEGER, PRIMARY KEY (id AUTOINCREMENT), FOREIGN KEY ("resolved_id") REFERENCES resolutions(id))''')
 
     cursor.execute('''CREATE TABLE IF NOT EXISTS resolutions 
         (id INTEGER, monitor VARCHAR(45), checkedURL VARCHAR(45), cause VARCHAR(100), startDate VARCHAR(45), endDate VARCHAR(45), length VARCHAR(45), link VARCHAR(150), PRIMARY KEY (id))''')
@@ -30,7 +30,8 @@ def dumpInDatabase(data, state):
         checkedURL_col = data[2]
         cause_col = data[3]
         startTime_col = data[4]
-        query = f"INSERT INTO alerts (monitor,checkedURL,cause,startDate,link) VALUES ('{monitor_col}','{checkedURL_col}','{cause_col}','{startTime_col}','{incidentURL_col}');"
+        nature_col = data[8]
+        query = f"INSERT INTO alerts (nature, monitor,checkedURL,cause,startDate,link) VALUES ('{nature_col}','{monitor_col}','{checkedURL_col}','{cause_col}','{startTime_col}','{incidentURL_col}');"
 
         # Check if event is already in database
         cursor.execute("SELECT * FROM alerts")
@@ -78,9 +79,9 @@ def dumpInDatabase(data, state):
             print(str(cursor.rowcount) + " row(s) affected")
             
 
-    if state == "alert": # If event is an alert
+    if state == "ALERT": # If event is an alert
         alertEvent(data)
-    elif state == "resolved": # else if event is a resolution
+    elif state == "RESOLVED": # else if event is a resolution
         resolvedEvent(data)
 
 
@@ -100,7 +101,7 @@ def mailParser(sender, content):
     stat = sender.split()[2]
     status = stat[:-1]
 
-    print(status)
+    # print(status)
 
 # Content parser
     soup = BeautifulSoup(content, "html.parser")
@@ -111,7 +112,7 @@ def mailParser(sender, content):
     pattern = r"Fincidents%252F(.*?)%2"
     incidentID = re.search(pattern, orgLink).group(1)
     incidentURL = f"https://betteruptime.com/team/{teamID}/incidents/{incidentID}"
-    print(incidentURL)
+    # print(incidentURL)
 
     # details
     incident_info_values = soup.find_all("span", class_="incident-info-value")
@@ -124,10 +125,17 @@ def mailParser(sender, content):
         endTime = incident_info_values[4].text[1:-1]
         length = incident_info_values[5].text
 
-    data = [incidentURL, monitor, checkedURL,
-            cause, startTime, endTime, length]
+    incident_info_labels = soup.find_all("strong", class_="incident-info-key")
+    
+    if incident_info_labels[0].text == "Monitor:":
+        incident_nature = "monitor"
+    elif incident_info_labels[0].text == "Heartbeat:":
+        incident_nature = "heartbeat"
 
-    print(f" ---------------- \n{monitor} \n ---------------- \n{checkedURL} \n ---------------- \n{cause} \n ---------------- \n{startTime} \n ---------------- \n{endTime} \n ---------------- \n{length}")
+    data = [incidentURL, monitor, checkedURL,
+            cause, startTime, endTime, length, status, incident_nature]
+
+    # print(f" ---------------- \n{monitor} \n ---------------- \n{checkedURL} \n ---------------- \n{cause} \n ---------------- \n{startTime} \n ---------------- \n{endTime} \n ---------------- \n{length}")
 
     return data
     # imap.SetFlag(i,bUid,"\Seen",1)
@@ -135,6 +143,6 @@ def mailParser(sender, content):
 
 data_list = mailParser(sender, mail.read())
 data_list2 = mailParser(sender2, mail2.read())
-dumpInDatabase(data_list, "alert")
 
-dumpInDatabase(data_list2,"resolved")
+dumpInDatabase(data_list, data_list[7])
+dumpInDatabase(data_list2, data_list2[7])

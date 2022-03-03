@@ -2,7 +2,7 @@ import os
 import re
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
-mail = open(r"mail-samples/mail-resolved-raw.html")
+mail = open(r"../mail-samples/mail-resolved-raw.html")
 sender = '"Better Uptime RESOLVED" <alerts@alerts.betteruptime.com>'
 
 load_dotenv()
@@ -46,7 +46,14 @@ def mailParser(sender, content):
         endTime = incident_info_values[4].text[1:-1]
         length = incident_info_values[5].text
 
-    print(f" ---------------- \n{monitor} \n ---------------- \n{checkedURL} \n ---------------- \n{cause} \n ---------------- \n{startTime} \n ---------------- \n{endTime} \n ---------------- \n{length}")
+    incident_info_labels = soup.find_all("strong", class_="incident-info-key")
+    
+    if incident_info_labels[0].text == "Monitor:":
+        incident_nature = "monitor"
+    elif incident_info_labels[0].text == "Heartbeat:":
+        incident_nature = "heartbeat"
+
+    # print(f" ---------------- \n{monitor} \n ---------------- \n{checkedURL} \n ---------------- \n{cause} \n ---------------- \n{startTime} \n ---------------- \n{endTime} \n ---------------- \n{length}")
 
     # imap.SetFlag(i,bUid,"\Seen",1)
 
