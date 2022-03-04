@@ -1,5 +1,6 @@
 .env
 *.db
+*.sql
 mail-samples/*
 __pycache__
 tests/__pycache__
