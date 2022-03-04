@@ -67,7 +67,7 @@ def dumpInDatabase(data, state):
         for row in results_resolutions:
             if incidentURL_col == row[7]:
                 exists = True
-                print("Aborted ! Alert already exists in database")
+                print("Aborted, alert already exists in database")
 
         if not exists:  # if not, add it to database
             cursor.execute(insertQuery)

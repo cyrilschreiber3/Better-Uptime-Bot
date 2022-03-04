@@ -69,7 +69,7 @@ def embed_builder(data):
     if status == "RESOLVED":
         embed.add_field(name="Resolved at:", value=endTime, inline=False)
         embed.add_field(name="Length :", value=incidentLength, inline=True)
-    embed.set_footer(text="Cyril Schreiber" + "\u3000" * 23 + "Better Uptime", icon_url="https://i.imgur.com/8R9zpmT.png")
+    embed.set_footer(text="Cyril Schreiber" + "\u3000" * 20 + "Better Uptime", icon_url="https://i.imgur.com/8R9zpmT.png")
 
     print("Done")
     return embed
@@ -92,17 +92,21 @@ async def send_alert(data):
 
 
 async def send_resolved(data):
-    # search and edit the alert message
+    # search and reply to the alert message
     print("Searching original alert messaage...", end=" ", flush=True)
     incidentURL = data[0]
     cursor.execute(f"SELECT * FROM alerts WHERE link IS '{incidentURL}'")
     results_alerts = cursor.fetchone()
     message = await channel.fetch_message(results_alerts[8])
+    alert_embed = message.embeds[0]
+    alert_embed.color = 0xff9500
     print("Done")
 
     resolved_embed = embed_builder(data)
-    print("Editing message...", end=" ", flush=True)
-    await message.edit(content="@everyone", embed=resolved_embed)
+    print("Replying to and editing alert message...", end=" ", flush=True)
+    reply = await message.reply(embed=resolved_embed)
+    reply_link = reply.jump_url
+    await message.edit(content=f"This incident is resolved. Resolution message : {reply_link}", embed=alert_embed)
     print("Done")
 
 
@@ -131,9 +135,9 @@ async def check_emails():
             await send_resolved(data_list)
 
     if len(mails) == 0:
-        print("No new emails to process")
+        print("No new emails to process\n")
     else:
-        print(f"Done processing {len(mails)} email(s) !")
+        print(f"Done processing {len(mails)} email(s) !\n")
 
 print("Starting bot...", end=" ", flush=True)
 client.run(TOKEN)  # start the bot
