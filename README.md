@@ -6,6 +6,12 @@ It works great, but with the free version I can only receive notifications via e
 So here is the plan:
 I connected the program to my email account, and when it receives a new mail from Better Uptime, it downloads that email, filters all the informarmations and store it in a database. Then a discord bot notifies me of the alert in a channel in my personnal server.
 
+## 04/03/2022 - New IMAP library and new status feature
+
+Today, I realized that the library I used to communicate with the IMAP server needed a license after a 30 days trial. When I saw that the license was almost $300 per year, I decided to use another library. I tested multiple ones and settled on [imap_tools](https://github.com/ikvk/imap_tools) which is a sort of "interface" with the imaplib integrated in Python that simplifies the configuration.
+
+I also added the status feature I talked about in the last update.
+
 ## 04/03/2022 - The bot works !
 
 I connected all the different modules that I developed separately up until now and everything works !
