@@ -1,4 +1,4 @@
-discord
+discord.py
 sqlite3
 dotenv
 imap_tools
