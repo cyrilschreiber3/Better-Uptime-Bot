@@ -1,9 +1,12 @@
 print("Loading libraries...", end=" ", flush=True)
 import os
 import sys
+import re
 import sqlite3
+import chilkat
 import discord
 from dotenv import load_dotenv
+from bs4 import BeautifulSoup
 from discord.ext import commands, tasks
 
 import mailBox
@@ -135,12 +138,11 @@ async def check_emails():
             await send_resolved(data_list)
 
     if len(mails) == 0:
-        print("No new emails to process")
+        print("No new emails to process\n")
     else:
-        print(f"Done processing {len(mails)} email(s) !")
+        print(f"Done processing {len(mails)} email(s) !\n")
 
     # update status
-    print("Updating bot alert status...", end=" ", flush=True)
     cursor.execute("SELECT * FROM alerts")
     alertsresults = cursor.fetchall()
     cursor.execute("SELECT * FROM resolutions")
@@ -148,13 +150,13 @@ async def check_emails():
 
     # if there is more alerts then resolutions, change status
     if len(alertsresults) > len(resolutionsresults): 
-        activity = discord.Activity(name="Ongoing incident(s)", type=1)
+        activity = discord.Activity(name="Incident ongoing", type=3)
         status = discord.Status.dnd
         await client.change_presence(activity=activity, status=status)
-        print("Done, ongoing incident(s)\n")
+        print("alert")
     else:
         await client.change_presence(activity=None, status=None)
-        print("Done, no ongoing incidents\n")
+        print("none")
 
 print("Starting bot...", end=" ", flush=True)
 client.run(TOKEN)  # start the bot

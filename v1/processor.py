@@ -105,7 +105,9 @@ def mailParser(sender, content):
     incidentURL = None
 
 # Status parser
-    status = sender.split()[2]
+    stat = sender.split()[2]
+    status = stat[:-1]
+
 
 # Content parser
     soup = BeautifulSoup(content, "html.parser")
