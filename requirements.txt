@@ -1,0 +1,5 @@
+discord
+sqlite3
+dotenv
+imap_tools
+beautifulsoup4
