@@ -1,6 +1,6 @@
 version: 2
 updates:
   - package-ecosystem: "pip"
-    directory: "/lib"
+    directory: "/"
     schedule:
       interval: "daily"
