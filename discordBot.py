@@ -3,6 +3,7 @@ import os
 import sys
 import sqlite3
 import discord
+import time
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from discord.ext import commands, tasks
@@ -22,6 +23,7 @@ print("Done")
 print("Initializing Discord and SQL connections...", end=" ", flush=True)
 # initialize discord library
 client = discord.Client()
+bot = commands.Bot(command_prefix="$")
 
 # initialize database
 db = sqlite3.connect("emails.db")  # Connect to database
@@ -118,14 +120,51 @@ async def send_resolved(data):
     print(f"\x1B[3m{str(cursor.rowcount)} row(s) affected\x1B[0m")
 
 
-@client.event
+@bot.event
 async def on_ready():  # execute when bot is ready
     global channel
-    channel = client.get_channel(946437156086358016)
+    channel = bot.get_channel(946437156086358016)
     await channel.send("Bot is online !")
     print("Bot is ready !")
     print("Starting processing loop...")
-    check_emails.start()  # start email check loop
+    # check_emails.start()  # start email check loop
+
+@bot.command()
+@commands.is_owner()
+async def shutdown(ctx):
+    print("Shutting down...")
+    await ctx.send("Shutting down...")
+    sys.exit()
+
+@bot.command()
+@commands.is_owner()
+async def stop(ctx):
+    print("Stopping email chacking loop...")
+    await ctx.send("Stopping email checking loop...")
+    check_emails.stop()
+
+@bot.command()
+@commands.is_owner()
+async def start(ctx):
+    print("Starting email chacking loop...")
+    await ctx.send("Starting email checking loop...")
+    check_emails.start()
+
+@bot.command()
+@commands.is_owner()
+async def clear(ctx):
+    print("Fetching messages to delete...", end=" ", flush=True)
+    mgs = []
+    async for i in ctx.history():
+        if i.embeds == []:
+            mgs.append(i)
+    print("Done")
+    print("Deleting messages...", end=" ", flush=True)
+    await channel.delete_messages(mgs)
+    print(f"Done, deleted {len(mgs)} messages")
+    logMessage = await ctx.send(f"Deleted `{len(mgs)} message(s)`!")
+    time.sleep(5)
+    await logMessage.delete()
 
 @tasks.loop(seconds=30)
 async def check_emails():
@@ -133,19 +172,20 @@ async def check_emails():
     mails = mailBox.fetchemails()
 
     print("Processing emails...")
-    for i in mails:
-        data_list = processor.mailParser(i[0], i[1])
-        processor.dumpInDatabase(data_list, data_list[7])
+    with channel.typing():
+        for i in mails:
+            data_list = processor.mailParser(i[0], i[1])
+            processor.dumpInDatabase(data_list, data_list[7])
 
-        if data_list[7] == "ALERT":  # If event is an alert
-            await send_alert(data_list)
-        elif data_list[7] == "RESOLVED":  # else if event is a resolution
-            await send_resolved(data_list)
+            if data_list[7] == "ALERT":  # If event is an alert
+                await send_alert(data_list)
+            elif data_list[7] == "RESOLVED":  # else if event is a resolution
+                await send_resolved(data_list)
 
-    if len(mails) == 0:
-        print("No new emails to process")
-    else:
-        print(f"Done processing {len(mails)} email(s) !")
+        if len(mails) == 0:
+            print("No new emails to process")
+        else:
+            print(f"Done processing {len(mails)} email(s) !")
     
     # delete old alert messages
     print("Searching for messages older than 30 days...")
@@ -189,11 +229,11 @@ async def check_emails():
     if len(alertsresults) > len(resolutionsresults): 
         activity = discord.Activity(name="Ongoing incident(s)", type=1)
         status = discord.Status.dnd
-        await client.change_presence(activity=activity, status=status)
+        await bot.change_presence(activity=activity, status=status)
         print("Done, ongoing incident(s)\n")
     else:
-        await client.change_presence(activity=None, status=None)
+        await bot.change_presence(activity=None, status=None)
         print("Done, no ongoing incidents\n")
 
 print("Starting bot...", end=" ", flush=True)
-client.run(TOKEN)  # start the bot
+bot.run(TOKEN)  # start the bot
