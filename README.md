@@ -11,7 +11,7 @@ I connected the program to my email account, and when it receives a new mail fro
 I said in my first log that I planned to implement a message cleanup feature, and here it is ! Basically, every time the loop runs it checks all the alert messages and deletes the ones that are more than 30 days old, except if the incident isn't resolved.
 Also, I added some commands to start and stop the loop and to shut down the bot completely. Maybe in the future I will find more commands ideas.
 
-## 04/03/2022 - New IMAP library and new status feature
+## 07/03/2022 - New IMAP library and new status feature
 
 Today, I realized that the library I used to communicate with the IMAP server needed a license after a 30 days trial. When I saw that the license was almost $300 per year, I decided to use another library. I tested multiple ones and settled on [imap_tools](https://github.com/ikvk/imap_tools) which is a sort of "interface" with the imaplib integrated in Python that simplifies the configuration.
 
