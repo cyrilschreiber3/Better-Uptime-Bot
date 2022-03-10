@@ -127,7 +127,7 @@ async def on_ready():  # execute when bot is ready
     await channel.send("Bot is online !")
     print("Bot is ready !")
     print("Starting processing loop...")
-    # check_emails.start()  # start email check loop
+    check_emails.start()  # start email check loop
 
 @bot.command()
 @commands.is_owner()
