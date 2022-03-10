@@ -16,10 +16,10 @@ def dumpInDatabase(data, state):
 
     # Create tables
     cursor.execute('''CREATE TABLE IF NOT EXISTS alerts
-                (id INTEGER, nature VARCHAR(20), monitor VARCHAR(45), checkedURL VARCHAR(45), cause VARCHAR(100), startDate VARCHAR(45), link VARCHAR(150), resolved_id INTEGER, message_id INTEGER, PRIMARY KEY (id AUTOINCREMENT), FOREIGN KEY ("resolved_id") REFERENCES resolutions(id))''')
+                (id INTEGER, nature VARCHAR(20), monitor VARCHAR(45), checkedURL VARCHAR(45), cause VARCHAR(100), startDate VARCHAR(45), link VARCHAR(150), resolved_id INTEGER, message_id BIGINT, PRIMARY KEY (id AUTOINCREMENT), FOREIGN KEY ("resolved_id") REFERENCES resolutions(id))''')
 
     cursor.execute('''CREATE TABLE IF NOT EXISTS resolutions 
-        (id INTEGER, monitor VARCHAR(45), checkedURL VARCHAR(45), cause VARCHAR(100), startDate VARCHAR(45), endDate VARCHAR(45), length VARCHAR(45), link VARCHAR(150), PRIMARY KEY (id))''')
+        (id INTEGER, monitor VARCHAR(45), checkedURL VARCHAR(45), cause VARCHAR(100), startDate VARCHAR(45), endDate VARCHAR(45), length VARCHAR(45), link VARCHAR(150), message_id BIGINT, PRIMARY KEY (id))''')
     print("Done")
 
     def alertEvent(data):  # When event is an alert
@@ -59,7 +59,7 @@ def dumpInDatabase(data, state):
         length_col = data[6]
         insertQuery = f"INSERT INTO resolutions (monitor,checkedURL,cause,startDate,endDate,length,link) VALUES ('{monitor_col}','{checkedURL_col}','{cause_col}','{startTime_col}','{endTime_col}','{length_col}','{incidentURL_col}');"
 
-        print("Adding alert to database...", end=" ", flush=True)
+        print("Adding resolution to database...", end=" ", flush=True)
         # Check if event is already in database
         cursor.execute("SELECT * FROM resolutions")
         results_resolutions = cursor.fetchall()

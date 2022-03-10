@@ -4,6 +4,7 @@ import sys
 import sqlite3
 import discord
 from dotenv import load_dotenv
+from datetime import datetime, timedelta
 from discord.ext import commands, tasks
 
 import mailBox
@@ -109,6 +110,13 @@ async def send_resolved(data):
     await message.edit(content=f"This incident is resolved. Resolution message : {reply_link}", embed=alert_embed)
     print("Done")
 
+    print("Adding message ID to database...", end=" ", flush=True)
+    updateQuery = f"UPDATE resolutions SET message_id = {reply.id} WHERE link = '{incidentURL}'"
+    cursor.execute(updateQuery)
+    db.commit()
+    print("Done")
+    print(f"\x1B[3m{str(cursor.rowcount)} row(s) affected\x1B[0m")
+
 
 @client.event
 async def on_ready():  # execute when bot is ready
@@ -138,6 +146,37 @@ async def check_emails():
         print("No new emails to process")
     else:
         print(f"Done processing {len(mails)} email(s) !")
+    
+    # delete old alert messages
+    print("Searching for messages older than 30 days...")
+    oneMonthAgo = datetime.today() - timedelta(days=30)
+    oneMonthAgoTimestamp = datetime.timestamp(oneMonthAgo)
+    cursor.execute("SELECT * FROM alerts")
+    alertsresults = cursor.fetchall()
+
+    for alert in alertsresults:
+        alertTimeList = alert[5].split()[:-1:]
+        alertTimeString = " ".join([str(elem) for elem in alertTimeList])
+        alertTimeDatetime = datetime.strptime(alertTimeString, '%d %b %Y at  %H:%M%p')
+        alertTimeTimestamp = datetime.timestamp(alertTimeDatetime)
+        isResolved = alert[7]
+        if oneMonthAgoTimestamp > alertTimeTimestamp and isResolved != None:
+            print("Found old message...", end=" ", flush=True)
+            message_id = alert[8]
+            try:
+                message = await channel.fetch_message(message_id)
+            except:
+                print("Error, already deleted")
+            else:
+                await message.delete()
+                print("Deleted")
+            finally:
+                print("Updating database...", end=" ", flush=True)
+                updateQuery = f"UPDATE alerts SET message_id = NULL WHERE link = '{alert[6]}'"
+                cursor.execute(updateQuery)
+                db.commit()
+                print("Done")
+                print(f"\x1B[3m{str(cursor.rowcount)} row(s) affected\x1B[0m")
 
     # update status
     print("Updating bot alert status...", end=" ", flush=True)
