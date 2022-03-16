@@ -5,3 +5,4 @@ mail-samples/*
 __pycache__
 tests/__pycache__
 v1/__pycache__
+.releases
