@@ -17,18 +17,29 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
 BOTID = os.getenv('DISCORD_BOT_ID')
 teamID = os.getenv("BETTERUPTIME_TEAMID")
+CHECK_INTERVAL = int(os.getenv("CHECK_INTERVAL"))
 
 print("Done")
 
-print("Initializing Discord and SQL connections...", end=" ", flush=True)
+print("Initializing Discord connection...", end=" ", flush=True)
 # initialize discord library
-client = discord.Client()
-bot = commands.Bot(command_prefix="$")
+intents = discord.Intents(messages=True, guilds=True, message_content=True, presences=True)
+client = discord.Client(intents=intents)
+bot = commands.Bot(command_prefix="$", intents=intents)
+print("Done")
 
 # initialize database
+print("Setting up the database...", end=" ", flush=True)
 db = sqlite3.connect("emails.db")  # Connect to database
 db.row_factory = sqlite3.Row  # Select row formating
 cursor = db.cursor()
+
+# Create tables
+cursor.execute('''CREATE TABLE IF NOT EXISTS alerts
+            (id INTEGER, nature VARCHAR(20), monitor VARCHAR(45), checkedURL VARCHAR(45), cause VARCHAR(100), startDate VARCHAR(45), link VARCHAR(150), resolved_id INTEGER, message_id BIGINT, PRIMARY KEY (id AUTOINCREMENT), FOREIGN KEY ("resolved_id") REFERENCES resolutions(id))''')
+
+cursor.execute('''CREATE TABLE IF NOT EXISTS resolutions 
+    (id INTEGER, monitor VARCHAR(45), checkedURL VARCHAR(45), cause VARCHAR(100), startDate VARCHAR(45), endDate VARCHAR(45), length VARCHAR(45), link VARCHAR(150), message_id BIGINT, PRIMARY KEY (id))''')
 print("Done")
 
 
@@ -166,13 +177,13 @@ async def clear(ctx):
     time.sleep(5)
     await logMessage.delete()
 
-@tasks.loop(seconds=30)
+@tasks.loop(seconds=CHECK_INTERVAL)
 async def check_emails():
 
     mails = mailBox.fetchemails()
 
     print("Processing emails...")
-    with channel.typing():
+    async with channel.typing():
         for i in mails:
             data_list = processor.mailParser(i[0], i[1])
             processor.dumpInDatabase(data_list, data_list[7])
@@ -188,35 +199,35 @@ async def check_emails():
             print(f"Done processing {len(mails)} email(s) !")
     
     # delete old alert messages
-    print("Searching for messages older than 30 days...")
-    oneMonthAgo = datetime.today() - timedelta(days=30)
-    oneMonthAgoTimestamp = datetime.timestamp(oneMonthAgo)
-    cursor.execute("SELECT * FROM alerts")
-    alertsresults = cursor.fetchall()
+    # print("Searching for messages older than 30 days...")
+    # oneMonthAgo = datetime.today() - timedelta(days=30)
+    # oneMonthAgoTimestamp = datetime.timestamp(oneMonthAgo)
+    # cursor.execute("SELECT * FROM alerts")
+    # alertsresults = cursor.fetchall()
 
-    for alert in alertsresults:
-        alertTimeList = alert[5].split()[:-1:]
-        alertTimeString = " ".join([str(elem) for elem in alertTimeList])
-        alertTimeDatetime = datetime.strptime(alertTimeString, '%d %b %Y at  %H:%M%p')
-        alertTimeTimestamp = datetime.timestamp(alertTimeDatetime)
-        isResolved = alert[7]
-        if oneMonthAgoTimestamp > alertTimeTimestamp and isResolved != None:
-            print("Found old message...", end=" ", flush=True)
-            message_id = alert[8]
-            try:
-                message = await channel.fetch_message(message_id)
-            except:
-                print("Error, already deleted")
-            else:
-                await message.delete()
-                print("Deleted")
-            finally:
-                print("Updating database...", end=" ", flush=True)
-                updateQuery = f"UPDATE alerts SET message_id = NULL WHERE link = '{alert[6]}'"
-                cursor.execute(updateQuery)
-                db.commit()
-                print("Done")
-                print(f"\x1B[3m{str(cursor.rowcount)} row(s) affected\x1B[0m")
+    # for alert in alertsresults:
+    #     alertTimeList = alert[5].split()[:-1:]
+    #     alertTimeString = " ".join([str(elem) for elem in alertTimeList])
+    #     alertTimeDatetime = datetime.strptime(alertTimeString, '%d %b %Y at  %H:%M%p')
+    #     alertTimeTimestamp = datetime.timestamp(alertTimeDatetime)
+    #     isResolved = alert[7]
+    #     if oneMonthAgoTimestamp > alertTimeTimestamp and isResolved != None:
+    #         print("Found old message...", end=" ", flush=True)
+    #         message_id = alert[8]
+    #         try:
+    #             message = await channel.fetch_message(message_id)
+    #         except:
+    #             print("Error, already deleted")
+    #         else:
+    #             await message.delete()
+    #             print("Deleted")
+    #         finally:
+    #             print("Updating database...", end=" ", flush=True)
+    #             updateQuery = f"UPDATE alerts SET message_id = NULL WHERE link = '{alert[6]}'"
+    #             cursor.execute(updateQuery)
+    #             db.commit()
+    #             print("Done")
+    #             print(f"\x1B[3m{str(cursor.rowcount)} row(s) affected\x1B[0m")
 
     # update status
     print("Updating bot alert status...", end=" ", flush=True)
