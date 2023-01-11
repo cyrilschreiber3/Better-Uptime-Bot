@@ -2,8 +2,8 @@ version: '3'
 
 services:
   app:
-    # image: cyrilschreiber/betteruptimebot:latest
-    build: . # use this line to build the image locally
+    image: cyrilschreiber/better-uptime-bot:latest
+    # build: . # use this line to build the image locally
     container_name: betteruptimebot_app
     restart: unless-stopped
     env_file:
