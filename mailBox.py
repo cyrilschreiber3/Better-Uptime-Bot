@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 load_dotenv()
 mailUser = os.getenv("MAILUSER")
 mailPWD = os.getenv("MAILPWD")
+mailServer = os.getenv("MAILSERVER")
+mailFolder = os.getenv("MAILFOLDER")
 
 
 
@@ -15,7 +17,7 @@ def fetchemails():
 
     print("Connecting to the IMAP server...", end=" ", flush=True)
     try:
-        imap = MailBox('imap.mail.me.com')
+        imap = MailBox(mailServer)
     except:
         print("Error")
         print(sys.exc_info()[0])
@@ -25,7 +27,7 @@ def fetchemails():
 
     print("Logging in...", end=" ", flush=True)
     try:
-        imap.login(mailUser, mailPWD, initial_folder='Better Uptime Alerts')
+        imap.login(mailUser, mailPWD, initial_folder=mailFolder)
     except:
         print("Error")
         print(sys.exc_info()[0])
