@@ -7,12 +7,14 @@ So here is the plan:
 I connected the program to my email account, and when it receives a new mail from Better Uptime, it downloads that email, filters all the informarmations and store it in a database. Then a discord bot notifies me of the alert in a channel in my personnal server.
 
 ## Installation
-This assumes that you already have a Discord bot and server set up
-
-- Unzip the release archive anywhere you want
-- Install the dependencies with the `requirements.txt` file
-- Fill the sample `.env` file
-- Start the script, and you are up and running !
+1. In your mail inbox, create a rule that moves all emails from `alerts@alerts.betteruptime.com` to a specific folder
+2. Create a Discord Application [here](https://discord.com/developers/applications/)
+3. Create a bot for your Application
+4. Add it to your server with the required permissions (Read Messages/View Channels, Send Messages, Manage Messages)
+5. Download the `docker-compose.yml` and `.env.example` files from the root of the repo
+6. Rename `.env.example` to `.env` and fill in the variables
+7. Deploy your stack with `docker compose up -d`
+8. Done ! Now the bot will notify you for every incident
 
 ## Logs
 
