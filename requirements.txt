@@ -2,3 +2,4 @@ discord.py
 python-dotenv
 imap_tools
 beautifulsoup4
+mysql-connector-python

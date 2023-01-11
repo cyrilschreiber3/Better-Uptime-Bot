@@ -4,14 +4,15 @@ import re
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 
+import database
+
 load_dotenv()
 teamID = os.getenv("BETTERUPTIME_TEAMID")
 
 
 def dumpInDatabase(data, state):
     print("Setting up the database...", end=" ", flush=True)
-    db = sqlite3.connect("emails.db")  # Connect to database
-    db.row_factory = sqlite3.Row  # Select row formating
+    db = database.db_connect()
     cursor = db.cursor()
 
     # Create tables
